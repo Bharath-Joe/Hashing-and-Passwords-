@@ -11,8 +11,8 @@ def hashArbitraryInput(input):
     return h.hexdigest()
 
 def modifyDigest(digestValue):
-    # truncate to 16 bits
-    return digestValue[0:4]
+    # truncated to 4 bits is [0:1], 8 bits is [0:2]
+    return digestValue[0:2]
 
 def generateMessage():
     res = ''.join(random.choices(string.ascii_letters, k = 16))
@@ -48,8 +48,8 @@ def main():
 
     # print(generateMessage())
     val, val1 = findCollision()
-    print(hashArbitraryInput(val))
-    print(hashArbitraryInput(val1))
+    print(val, hashArbitraryInput(val))
+    print(val1, hashArbitraryInput(val1))
 
 if __name__ == '__main__':
     main()
