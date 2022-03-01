@@ -1,38 +1,38 @@
 from Crypto.Hash import SHA256
 import random, string
+import datetime
 
+from numpy import binary_repr
 
 def hashArbitraryInput(input):
-    # print("Arbitrary input: " + input)
     bytesInput = str.encode(input) # converts string input into bytes
     h = SHA256.new()
     h.update(bytesInput)
-    # print("Resulting digest: ", end = "")
     return h.hexdigest()
 
-def modifyDigest(digestValue):
-    # truncated to 4 bits is [0:1], 8 bits is [0:2]
-    return digestValue[0:2]
+def modifyDigest(digestValue, modVal, length):
+    modVal = int(modVal, 16)
+    finalBits = ""
+    for val in digestValue:
+        fourBitValue = '{:04b}'.format(int(val, 16))
+        finalBits += fourBitValue
+    finalBits = int(finalBits, 2)
+    binaryAfterMod = bin(finalBits % modVal).replace("0b","").zfill(length)
+    return binaryAfterMod
 
 def generateMessage():
     res = ''.join(random.choices(string.ascii_letters, k = 16))
     return res
 
-def findCollision():
+def findCollision(modVal, length):
     myDict = {}
     while(True):
         someInput = generateMessage()
-        someInput2 = generateMessage()
-        if someInput != someInput2:
-            firstDigest = modifyDigest(hashArbitraryInput(someInput))
-            myDict[someInput] = firstDigest
-            secondDigest = modifyDigest(hashArbitraryInput(someInput2))
-            myDict[someInput2] = secondDigest
-            for key in myDict.keys():
-                for key2 in myDict.keys():
-                    if key != key2 and myDict[key] == myDict[key2]:
-                        return key, key2
+        truncatedDigest = modifyDigest(hashArbitraryInput(someInput), modVal, length)
+        if truncatedDigest in myDict.keys():
+            return myDict[truncatedDigest], truncatedDigest, someInput, len(myDict.keys())
         else:
+            myDict[truncatedDigest] = someInput
             continue
 
 
@@ -46,10 +46,20 @@ def main():
     # print(hashArbitraryInput("BOB"))
     # print(hashArbitraryInput("BOA")) # BOB has hamming distance of 1 bit with BOA
 
-    # print(generateMessage())
-    val, val1 = findCollision()
-    print(val, hashArbitraryInput(val))
-    print(val1, hashArbitraryInput(val1))
+    hexString = 'ff'
+    addedVal = '3'
+    for i in range(8, 52, 2):
+        if i % 4 != 0:
+            hexString = addedVal + hexString
+        if i % 4 == 0 and i != 8:
+            hexString = hexString.replace("3", "f", 1)
+        print("Num of bits are: ", i)
+        start_time = datetime.datetime.now()
+        print(findCollision(hexString, i))
+        end_time = datetime.datetime.now()
+        print("Time elapsed: ", end_time - start_time)
+        print("----")
+
 
 if __name__ == '__main__':
     main()
